@@ -1,5 +1,7 @@
+use jsonwebtoken::{decode, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::BTreeMap;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -8,6 +10,8 @@ pub enum TelemetryError {
     MissingField(&'static str),
     #[error("invalid json payload")]
     InvalidJson(#[from] serde_json::Error),
+    #[error("invalid authorization token")]
+    InvalidToken(#[from] jsonwebtoken::errors::Error),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -25,6 +29,21 @@ pub struct TelemetryEvent {
 pub struct CapabilityToken {
     pub subject: String,
     pub allowed_region: Option<String>,
+    pub roles: Vec<String>,
+    pub scope_filters: BTreeMap<String, String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct JwtClaims {
+    pub sub: String,
+    #[serde(default)]
+    pub region: Option<String>,
+    #[serde(default)]
+    pub roles: Vec<String>,
+    #[serde(default)]
+    pub scope_filters: BTreeMap<String, String>,
+    #[serde(default)]
+    pub exp: usize,
 }
 
 pub fn validate_event(payload: &str) -> Result<TelemetryEvent, TelemetryError> {
@@ -42,6 +61,17 @@ pub fn validate_event(payload: &str) -> Result<TelemetryEvent, TelemetryError> {
 }
 
 pub fn map_oidc_claims(claims: &Value) -> CapabilityToken {
+    let scope_filters = claims
+        .get("scope_filters")
+        .and_then(Value::as_object)
+        .map(|filters| {
+            filters
+                .iter()
+                .filter_map(|(key, value)| value.as_str().map(|value| (key.clone(), value.to_owned())))
+                .collect()
+        })
+        .unwrap_or_default();
+
     CapabilityToken {
         subject: claims
             .get("sub")
@@ -52,7 +82,42 @@ pub fn map_oidc_claims(claims: &Value) -> CapabilityToken {
             .get("region")
             .and_then(Value::as_str)
             .map(str::to_owned),
+        roles: claims
+            .get("roles")
+            .and_then(Value::as_array)
+            .map(|roles| {
+                roles
+                    .iter()
+                    .filter_map(Value::as_str)
+                    .map(str::to_owned)
+                    .collect()
+            })
+            .unwrap_or_default(),
+        scope_filters,
     }
+}
+
+pub fn extract_claims_from_jwt(
+    token: &str,
+    secret: &[u8],
+) -> Result<CapabilityToken, jsonwebtoken::errors::Error> {
+    let token = token.strip_prefix("Bearer ").unwrap_or(token);
+    let data = decode::<JwtClaims>(
+        token,
+        &DecodingKey::from_secret(secret),
+        &Validation::default(),
+    )?;
+    let mut scope_filters = data.claims.scope_filters;
+    if let Some(region) = data.claims.region.clone() {
+        scope_filters.entry("region".to_owned()).or_insert(region.clone());
+    }
+
+    Ok(CapabilityToken {
+        subject: data.claims.sub,
+        allowed_region: data.claims.region,
+        roles: data.claims.roles,
+        scope_filters,
+    })
 }
 
 pub fn ingest(payload: &str, claims: Option<&Value>) -> Result<TelemetryEvent, TelemetryError> {
@@ -77,5 +142,22 @@ mod tests {
         let event = ingest(payload, Some(&claims)).unwrap();
 
         assert_eq!(event.region.as_deref(), Some("nouvelle-aquitaine"));
+    }
+
+    #[test]
+    fn maps_scope_filters_from_claims() {
+        let claims = serde_json::json!({
+            "sub": "u1",
+            "roles": ["viewer"],
+            "scope_filters": {"department": "electronics"}
+        });
+
+        let token = map_oidc_claims(&claims);
+
+        assert_eq!(token.roles, vec!["viewer"]);
+        assert_eq!(
+            token.scope_filters.get("department").map(String::as_str),
+            Some("electronics")
+        );
     }
 }

@@ -78,6 +78,17 @@ h1 {
   font-weight: 700;
 }
 
+.chart-panel--blocked {
+  color: #8f2d56;
+  border-color: #e6b8c8;
+}
+
+.chart-error {
+  margin: 0;
+  color: #5b3342;
+  font-weight: 700;
+}
+
 svg {
   width: 100%;
   aspect-ratio: 16 / 7;

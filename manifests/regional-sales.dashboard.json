@@ -1,0 +1,22 @@
+{
+  "id": "regional-sales",
+  "title": "Regional Sales",
+  "refreshSeconds": 30,
+  "security": {
+    "visibility": "restricted",
+    "allowed_roles": ["sales-analyst", "admin"],
+    "enforced_filters": {
+      "region": "nouvelle-aquitaine"
+    }
+  },
+  "widgets": [
+    {
+      "id": "regional-revenue",
+      "kind": "timeseries",
+      "query": {
+        "metric": "revenue",
+        "region": "nouvelle-aquitaine"
+      }
+    }
+  ]
+}
