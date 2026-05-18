@@ -63,16 +63,31 @@ pub fn validate_event(payload: &str) -> Result<TelemetryEvent, TelemetryError> {
 }
 
 pub fn map_oidc_claims(claims: &Value) -> CapabilityToken {
-    let scope_filters = claims
+    let mut scope_filters: BTreeMap<String, String> = claims
         .get("scope_filters")
         .and_then(Value::as_object)
         .map(|filters| {
             filters
                 .iter()
-                .filter_map(|(key, value)| value.as_str().map(|value| (key.clone(), value.to_owned())))
+                .filter_map(|(key, value)| {
+                    value.as_str().map(|value| (key.clone(), value.to_owned()))
+                })
                 .collect()
         })
         .unwrap_or_default();
+
+    let allowed_region = claims
+        .get("region")
+        .and_then(Value::as_str)
+        .map(str::to_owned);
+
+    // Ensure region is always reflected in scope_filters so downstream RLS
+    // filters can enforce it without special-casing the "region" dimension.
+    if let Some(region) = &allowed_region {
+        scope_filters
+            .entry("region".to_owned())
+            .or_insert_with(|| region.clone());
+    }
 
     CapabilityToken {
         subject: claims
@@ -80,10 +95,7 @@ pub fn map_oidc_claims(claims: &Value) -> CapabilityToken {
             .and_then(Value::as_str)
             .unwrap_or("anonymous")
             .to_owned(),
-        allowed_region: claims
-            .get("region")
-            .and_then(Value::as_str)
-            .map(str::to_owned),
+        allowed_region,
         roles: claims
             .get("roles")
             .and_then(Value::as_array)
@@ -111,7 +123,9 @@ pub fn extract_claims_from_jwt(
     )?;
     let mut scope_filters = data.claims.scope_filters;
     if let Some(region) = data.claims.region.clone() {
-        scope_filters.entry("region".to_owned()).or_insert(region.clone());
+        scope_filters
+            .entry("region".to_owned())
+            .or_insert(region.clone());
     }
 
     Ok(CapabilityToken {

@@ -8,10 +8,12 @@
     "quasar-vscode",
     "ui",
     "sdk/analytics-core",
-    "sdk/analytics-replay"
+    "sdk/analytics-replay",
+    "tests/e2e"
   ],
   "scripts": {
     "check": "npm --workspaces run check --if-present",
+    "test:e2e": "npm --workspace @quasar/e2e run test",
     "mcp": "npm --workspace quasar-mcp run start"
   }
 }

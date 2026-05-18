@@ -20,7 +20,10 @@ pub struct Chunk {
 }
 
 pub fn build_chunk(events: Vec<StoredEvent>) -> Chunk {
-    let base_timestamp_ms = events.first().map(|event| event.timestamp_ms).unwrap_or_default();
+    let base_timestamp_ms = events
+        .first()
+        .map(|event| event.timestamp_ms)
+        .unwrap_or_default();
     let mut previous_delta = 0;
     let mut previous_timestamp = base_timestamp_ms;
     let mut delta_of_delta_ms = Vec::with_capacity(events.len().saturating_sub(1));

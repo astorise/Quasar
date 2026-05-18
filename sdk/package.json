@@ -8,7 +8,10 @@
     "analytics-replay"
   ],
   "scripts": {
-    "build": "npm --workspaces run build --if-present",
+    "build": "rollup -c rollup.config.mjs",
     "check": "npm --workspaces run check --if-present"
+  },
+  "devDependencies": {
+    "rollup": "^4.41.0"
   }
 }

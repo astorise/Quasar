@@ -15,8 +15,14 @@ pub enum ReplayError {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "kind", rename_all = "lowercase")]
 pub enum ReplayChunkPayload {
-    Dom { ts: i64, patches: Vec<Value> },
-    Interaction { ts: i64, samples: Vec<InteractionSample> },
+    Dom {
+        ts: i64,
+        patches: Vec<Value>,
+    },
+    Interaction {
+        ts: i64,
+        samples: Vec<InteractionSample>,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -102,7 +108,8 @@ impl Default for ZstdCompressor {
 #[cfg(feature = "zstd")]
 impl Compressor for ZstdCompressor {
     fn compress(&self, input: &[u8]) -> Result<Vec<u8>, ReplayError> {
-        zstd::stream::encode_all(input, self.level).map_err(|e| ReplayError::Compression(e.to_string()))
+        zstd::stream::encode_all(input, self.level)
+            .map_err(|e| ReplayError::Compression(e.to_string()))
     }
 }
 
@@ -125,7 +132,9 @@ pub fn process_payload<C: Compressor>(
     for chunk in &payload.chunks {
         match chunk {
             ReplayChunkPayload::Dom { patches, .. } => structural.push(patches),
-            ReplayChunkPayload::Interaction { samples, .. } => interaction.extend(samples.iter().cloned()),
+            ReplayChunkPayload::Interaction { samples, .. } => {
+                interaction.extend(samples.iter().cloned())
+            }
         }
     }
     let structural_bytes = serde_json::to_vec(&structural)?;
@@ -167,8 +176,12 @@ pub fn pack_interaction_stream(samples: &[InteractionSample]) -> Vec<DeltaSample
                 dd
             }
         };
-        let x_dd = sample.x.map(|x| pack_coordinate(x as i64, &mut prev_x, &mut prev_x_delta));
-        let y_dd = sample.y.map(|y| pack_coordinate(y as i64, &mut prev_y, &mut prev_y_delta));
+        let x_dd = sample
+            .x
+            .map(|x| pack_coordinate(x as i64, &mut prev_x, &mut prev_x_delta));
+        let y_dd = sample
+            .y
+            .map(|y| pack_coordinate(y as i64, &mut prev_y, &mut prev_y_delta));
         packed.push(DeltaSample {
             kind: sample.kind.clone(),
             delta_of_delta_ts: dd_ts,
@@ -203,7 +216,10 @@ mod tests {
     #[test]
     fn rejects_missing_session() {
         let raw = json!({ "session_id": "", "chunks": [] }).to_string();
-        assert!(matches!(parse_payload(&raw), Err(ReplayError::MissingSession)));
+        assert!(matches!(
+            parse_payload(&raw),
+            Err(ReplayError::MissingSession)
+        ));
     }
 
     #[test]
@@ -230,9 +246,36 @@ mod tests {
             chunks: vec![ReplayChunkPayload::Interaction {
                 ts: 0,
                 samples: vec![
-                    InteractionSample { kind: "pointer".into(), ts: 100, x: Some(10.0), y: Some(20.0), x_ratio: None, y_ratio: None, top: None, ratio: None },
-                    InteractionSample { kind: "pointer".into(), ts: 150, x: Some(12.0), y: Some(23.0), x_ratio: None, y_ratio: None, top: None, ratio: None },
-                    InteractionSample { kind: "pointer".into(), ts: 200, x: Some(14.0), y: Some(26.0), x_ratio: None, y_ratio: None, top: None, ratio: None },
+                    InteractionSample {
+                        kind: "pointer".into(),
+                        ts: 100,
+                        x: Some(10.0),
+                        y: Some(20.0),
+                        x_ratio: None,
+                        y_ratio: None,
+                        top: None,
+                        ratio: None,
+                    },
+                    InteractionSample {
+                        kind: "pointer".into(),
+                        ts: 150,
+                        x: Some(12.0),
+                        y: Some(23.0),
+                        x_ratio: None,
+                        y_ratio: None,
+                        top: None,
+                        ratio: None,
+                    },
+                    InteractionSample {
+                        kind: "pointer".into(),
+                        ts: 200,
+                        x: Some(14.0),
+                        y: Some(26.0),
+                        x_ratio: None,
+                        y_ratio: None,
+                        top: None,
+                        ratio: None,
+                    },
                 ],
             }],
             reason: None,

@@ -77,7 +77,13 @@ pub fn compile_rls_filter(claims: &QueryClaims) -> StorageFilter {
     let expression = claims
         .scope_filters
         .iter()
-        .map(|(key, value)| format!("event.properties.{} == '{}'", key, value.replace('\'', "\\'")))
+        .map(|(key, value)| {
+            format!(
+                "event.properties.{} == '{}'",
+                key,
+                value.replace('\'', "\\'")
+            )
+        })
         .collect::<Vec<_>>()
         .join(" && ");
 
@@ -138,8 +144,8 @@ mod tests {
             scope_filters: [("region".to_owned(), "nouvelle-aquitaine".to_owned())].into(),
         };
 
-        let secured = intercept_query_payload(r#"{"metric":"conversion","filters":{}}"#, &claims)
-            .unwrap();
+        let secured =
+            intercept_query_payload(r#"{"metric":"conversion","filters":{}}"#, &claims).unwrap();
 
         assert_eq!(secured["filters"]["region"], "nouvelle-aquitaine");
     }
