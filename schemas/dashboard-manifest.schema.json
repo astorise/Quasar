@@ -59,7 +59,26 @@
             "type": "string"
           },
           "kind": {
-            "enum": ["timeseries", "funnel", "retention"]
+            "enum": ["metric", "timeseries", "funnel", "retention"]
+          },
+          "title": {
+            "type": "string"
+          },
+          "layout": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "columns": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 4
+              },
+              "rows": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 4
+              }
+            }
           },
           "query": {
             "type": "object",

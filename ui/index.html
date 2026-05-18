@@ -7,17 +7,6 @@
     <script type="module" src="/src/main.js"></script>
   </head>
   <body>
-    <quasar-provider endpoint="/api/query">
-      <main class="shell">
-        <section class="dashboard-header">
-          <div>
-            <p class="eyebrow">Edge analytics</p>
-            <h1>Quasar</h1>
-          </div>
-          <span class="status">Live</span>
-        </section>
-        <quasar-timeseries-chart metric="signups"></quasar-timeseries-chart>
-      </main>
-    </quasar-provider>
+    <quasar-provider endpoint="/api/query" manifest="/main.dashboard.json"></quasar-provider>
   </body>
 </html>

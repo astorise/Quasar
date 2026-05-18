@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "check": "node --check src/main.js && node --check src/components/quasar-provider.js && node --check src/components/quasar-timeseries-chart.js"
+    "check": "node --check src/main.js && node --check src/components/quasar-widget.js && node --check src/components/quasar-provider.js && node --check src/components/quasar-timeseries-chart.js && node --check src/components/quasar-metric-card.js"
   },
   "dependencies": {
     "@vitejs/plugin-basic-ssl": "^2.3.0",
