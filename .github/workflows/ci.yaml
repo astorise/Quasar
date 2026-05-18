@@ -9,15 +9,14 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  # ── 1. Rust workspace: fmt / clippy / test ──────────────────────────────────
+  # ── 1. Rust workspace: fmt / clippy / test / wasm build ────────────────────
   rust:
-    name: Rust (fmt · clippy · test)
+    name: Rust (fmt · clippy · test · wasm)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -26,7 +25,7 @@ jobs:
           targets: wasm32-wasip2
 
       - name: Cache cargo registry
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
@@ -44,7 +43,6 @@ jobs:
       - name: Unit & integration tests
         run: cargo test --workspace
 
-      # Build Wasm binaries and upload as CI artifacts on every run
       - name: Build Wasm FaaS components
         run: |
           cargo build --workspace --release --target wasm32-wasip2
@@ -54,23 +52,24 @@ jobs:
           done
 
       - name: Upload Wasm artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: wasm-faas-${{ github.sha }}
+          name: wasm-faas
           path: dist/wasm/*.wasm
+          if-no-files-found: error
           retention-days: 14
 
-  # ── 2. Node.js workspace: install / check / e2e ────────────────────────────
+  # ── 2. Node.js workspace: install / check / e2e / bundle ──────────────────
   node:
-    name: Node.js (check · e2e)
+    name: Node.js (check · e2e · bundle)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
@@ -82,7 +81,6 @@ jobs:
       - name: E2E test suite
         run: npm run test:e2e
 
-      # Bundle SDK and upload as CI artifact on every run
       - name: Bundle SDK
         run: |
           npx rollup -c sdk/rollup.config.mjs
@@ -96,12 +94,13 @@ jobs:
           NODE_ENV: production
 
       - name: Upload SDK + UI artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: js-bundles-${{ github.sha }}
+          name: js-bundles
           path: |
             dist/sdk/*.mjs
             ui/dist/**
+          if-no-files-found: error
           retention-days: 14
 
   # ── 3. Release (tag-triggered): reuse CI artifacts + package vsix ──────────
@@ -113,36 +112,34 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Download Wasm artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
-          name: wasm-faas-${{ github.sha }}
+          name: wasm-faas
           path: dist/wasm
 
       - name: Download SDK + UI artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
-          name: js-bundles-${{ github.sha }}
+          name: js-bundles
           path: dist
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm install --workspaces --include-workspace-root
 
-      # Package VS Code extension (uses workspace-installed vsce)
       - name: Package VS Code extension
         run: |
           cd quasar-vscode
           npx vsce package --no-dependencies --out ../dist/quasar-vscode.vsix
 
-      # Create GitHub Release and attach all assets
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
