@@ -1,0 +1,14 @@
+{
+  "name": "quasar-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "quasar-mcp",
+    "quasar-vscode",
+    "ui"
+  ],
+  "scripts": {
+    "check": "npm --workspaces run check --if-present"
+  }
+}

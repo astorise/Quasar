@@ -1,0 +1,14 @@
+apiVersion: tachyon.dev/v1alpha1
+kind: MeshApplication
+metadata:
+  name: quasar-analytics
+spec:
+  components:
+    - name: olap-engine
+      module: faas/olap-engine.wasm
+      permissions:
+        - reddb:read
+    - name: view-builder
+      module: faas/view-builder.wasm
+      subscriptions:
+        - reddb.cdc.events

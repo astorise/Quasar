@@ -1,0 +1,21 @@
+package quasar:query;
+
+interface analytics {
+  record query-request {
+    project-id: string,
+    metric: string,
+    from: string,
+    to: string,
+    filter-json: string,
+  }
+
+  record query-result {
+    view-json: string,
+  }
+
+  query: func(request: query-request, capability-token: string) -> query-result;
+}
+
+world olap-engine {
+  export analytics;
+}

@@ -1,0 +1,27 @@
+package quasar:ingestion;
+
+interface telemetry {
+  record event {
+    distinct-id: string,
+    name: string,
+    timestamp: string,
+    region: option<string>,
+    properties-json: string,
+  }
+
+  enum ingest-status {
+    accepted,
+    rejected,
+  }
+
+  record ingest-result {
+    status: ingest-status,
+    message: string,
+  }
+
+  ingest: func(payload-json: string, oidc-token: option<string>) -> ingest-result;
+}
+
+world telemetry-bridge {
+  export telemetry;
+}

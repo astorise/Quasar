@@ -1,0 +1,11 @@
+{
+  "name": "quasar-mcp",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "quasar-mcp": "src/index.js"
+  },
+  "scripts": {
+    "check": "node --check src/index.js"
+  }
+}

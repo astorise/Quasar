@@ -1,0 +1,14 @@
+apiVersion: tachyon.dev/v1alpha1
+kind: MeshApplication
+metadata:
+  name: quasar-core
+spec:
+  components:
+    - name: telemetry-bridge
+      module: faas/telemetry-bridge.wasm
+      route: /telemetry/ingest
+    - name: timeseries-writer
+      module: faas/timeseries-writer.wasm
+      storage:
+        engine: reddb
+        path: quasar/events

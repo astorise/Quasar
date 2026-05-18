@@ -1,0 +1,27 @@
+{
+  "name": "quasar-vscode",
+  "displayName": "Quasar Dashboard Sync",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/extension.js",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "activationEvents": [
+    "onCommand:quasar.syncDashboard"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "quasar.syncDashboard",
+        "title": "Quasar: Sync Dashboard Manifest"
+      }
+    ]
+  },
+  "scripts": {
+    "check": "node --check src/extension.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.90.0"
+  }
+}
