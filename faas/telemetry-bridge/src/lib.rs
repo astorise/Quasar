@@ -21,6 +21,8 @@ pub struct TelemetryEvent {
     pub timestamp: String,
     #[serde(default)]
     pub region: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub session_id: Option<String>,
     #[serde(default)]
     pub properties: Value,
 }

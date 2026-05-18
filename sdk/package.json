@@ -1,0 +1,14 @@
+{
+  "name": "@quasar/sdk-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "analytics-core",
+    "analytics-replay"
+  ],
+  "scripts": {
+    "build": "npm --workspaces run build --if-present",
+    "check": "npm --workspaces run check --if-present"
+  }
+}

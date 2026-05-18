@@ -5,6 +5,7 @@ members = [
   "faas/timeseries-writer",
   "faas/olap-engine",
   "faas/view-builder",
+  "faas/replay-writer",
 ]
 
 [workspace.package]

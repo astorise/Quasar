@@ -1,0 +1,29 @@
+{
+  "name": "@quasar/analytics-core",
+  "version": "0.1.0",
+  "description": "Lightweight ES6 telemetry tracker for the Quasar edge analytics platform.",
+  "type": "module",
+  "main": "src/index.js",
+  "module": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./queue": "./src/queue.js",
+    "./rage-click": "./src/rage-click.js"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "rollup -c ../rollup.config.mjs --bundleConfigAsCjs --silent",
+    "check": "node --check src/index.js && node --check src/queue.js && node --check src/rage-click.js && node --check src/session.js && node --check src/transport.js && node --check src/replay-loader.js"
+  },
+  "keywords": [
+    "quasar",
+    "analytics",
+    "telemetry",
+    "edge"
+  ],
+  "license": "MIT"
+}

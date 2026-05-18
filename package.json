@@ -6,7 +6,9 @@
   "workspaces": [
     "quasar-mcp",
     "quasar-vscode",
-    "ui"
+    "ui",
+    "sdk/analytics-core",
+    "sdk/analytics-replay"
   ],
   "scripts": {
     "check": "npm --workspaces run check --if-present",

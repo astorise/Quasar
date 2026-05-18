@@ -11,6 +11,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const schemas = new Map([
   ["telemetry-event", "schemas/telemetry-event.schema.json"],
   ["dashboard-manifest", "schemas/dashboard-manifest.schema.json"],
+  ["replay-payload", "schemas/replay-payload.schema.json"],
 ]);
 const schemaNames = [...schemas.keys()];
 const ajv = new Ajv2020({ allErrors: true, strict: false });

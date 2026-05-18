@@ -7,6 +7,8 @@ pub struct StoredEvent {
     pub event: String,
     pub timestamp_ms: i64,
     pub region: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub session_id: Option<String>,
     pub properties: Value,
 }
 
@@ -50,6 +52,7 @@ mod tests {
                 event: "click".into(),
                 timestamp_ms,
                 region: None,
+                session_id: None,
                 properties: Value::Null,
             })
             .collect();

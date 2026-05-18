@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quasar.local/schemas/replay-payload.schema.json",
+  "title": "Quasar Session Replay Payload",
+  "type": "object",
+  "required": ["session_id", "chunks"],
+  "additionalProperties": false,
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reason": {
+      "type": "string",
+      "enum": ["timer", "threshold", "unload", "manual", "stop"]
+    },
+    "chunks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["kind", "ts", "patches"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": { "const": "dom" },
+              "ts": { "type": "integer" },
+              "patches": {
+                "type": "array",
+                "items": { "type": "object" }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": ["kind", "ts", "samples"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": { "const": "interaction" },
+              "ts": { "type": "integer" },
+              "samples": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["kind", "ts"],
+                  "additionalProperties": true,
+                  "properties": {
+                    "kind": { "enum": ["pointer", "scroll"] },
+                    "ts": { "type": "integer" },
+                    "x": { "type": "number" },
+                    "y": { "type": "number" },
+                    "x_ratio": { "type": "number" },
+                    "y_ratio": { "type": "number" },
+                    "top": { "type": "number" },
+                    "ratio": { "type": "number" }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

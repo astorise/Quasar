@@ -12,3 +12,11 @@ spec:
       storage:
         engine: reddb
         path: quasar/events
+    - name: replay-writer
+      module: faas/replay-writer.wasm
+      route: /telemetry/replay
+      isolation: dedicated-pool
+      compression: zstd
+      storage:
+        engine: reddb
+        partition: replay/<session_id>

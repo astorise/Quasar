@@ -1,0 +1,23 @@
+{
+  "name": "@quasar/analytics-replay",
+  "version": "0.1.0",
+  "description": "Lazy-loaded session replay recorder for the Quasar edge analytics platform.",
+  "type": "module",
+  "main": "src/index.js",
+  "module": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./dom-recorder": "./src/dom-recorder.js",
+    "./interaction-sampler": "./src/interaction-sampler.js"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "rollup -c ../rollup.config.mjs --bundleConfigAsCjs --silent",
+    "check": "node --check src/index.js && node --check src/dom-recorder.js && node --check src/interaction-sampler.js"
+  },
+  "license": "MIT"
+}
