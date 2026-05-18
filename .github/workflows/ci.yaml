@@ -44,6 +44,22 @@ jobs:
       - name: Unit & integration tests
         run: cargo test --workspace
 
+      # Build Wasm binaries and upload as CI artifacts on every run
+      - name: Build Wasm FaaS components
+        run: |
+          cargo build --workspace --release --target wasm32-wasip2
+          mkdir -p dist/wasm
+          for crate in telemetry-bridge timeseries-writer olap-engine view-builder replay-writer; do
+            cp target/wasm32-wasip2/release/${crate//-/_}.wasm dist/wasm/${crate}.wasm
+          done
+
+      - name: Upload Wasm artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-faas-${{ github.sha }}
+          path: dist/wasm/*.wasm
+          retention-days: 14
+
   # ── 2. Node.js workspace: install / check / e2e ────────────────────────────
   node:
     name: Node.js (check · e2e)
@@ -66,7 +82,29 @@ jobs:
       - name: E2E test suite
         run: npm run test:e2e
 
-  # ── 3. Release artifact build (tag-triggered) ──────────────────────────────
+      # Bundle SDK and upload as CI artifact on every run
+      - name: Bundle SDK
+        run: |
+          npx rollup -c sdk/rollup.config.mjs
+          mkdir -p dist/sdk
+          cp sdk/analytics-core/dist/quasar-core.mjs dist/sdk/
+          cp sdk/analytics-replay/dist/quasar-replay.mjs dist/sdk/
+
+      - name: Build UI
+        run: npm --workspace quasar-ui run build
+        env:
+          NODE_ENV: production
+
+      - name: Upload SDK + UI artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: js-bundles-${{ github.sha }}
+          path: |
+            dist/sdk/*.mjs
+            ui/dist/**
+          retention-days: 14
+
+  # ── 3. Release (tag-triggered): reuse CI artifacts + package vsix ──────────
   release:
     name: Release artifacts
     needs: [rust, node]
@@ -77,20 +115,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Download Wasm artifacts
+        uses: actions/download-artifact@v4
         with:
-          targets: wasm32-wasip2
+          name: wasm-faas-${{ github.sha }}
+          path: dist/wasm
 
-      - name: Cache cargo registry
-        uses: actions/cache@v4
+      - name: Download SDK + UI artifacts
+        uses: actions/download-artifact@v4
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-release-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-release-
+          name: js-bundles-${{ github.sha }}
+          path: dist
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -101,36 +136,13 @@ jobs:
       - name: Install dependencies
         run: npm install --workspaces --include-workspace-root
 
-      # Build Wasm binaries
-      - name: Build Wasm FaaS components
-        run: |
-          cargo build --workspace --release --target wasm32-wasip2
-          mkdir -p dist/wasm
-          for crate in telemetry-bridge timeseries-writer olap-engine view-builder replay-writer; do
-            cp target/wasm32-wasip2/release/${crate//-/_}.wasm dist/wasm/${crate}.wasm
-          done
-
-      # Bundle ES6 SDK modules
-      - name: Bundle SDK
-        run: |
-          npx rollup -c sdk/rollup.config.mjs
-          mkdir -p dist/sdk
-          cp sdk/analytics-core/dist/quasar-core.mjs dist/sdk/
-          cp sdk/analytics-replay/dist/quasar-replay.mjs dist/sdk/
-
-      # Build UI bundle
-      - name: Build UI
-        run: npm --workspace quasar-ui run build
-        env:
-          NODE_ENV: production
-
       # Package VS Code extension (uses workspace-installed vsce)
       - name: Package VS Code extension
         run: |
           cd quasar-vscode
           npx vsce package --no-dependencies --out ../dist/quasar-vscode.vsix
 
-      # Create GitHub Release and upload assets
+      # Create GitHub Release and attach all assets
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
