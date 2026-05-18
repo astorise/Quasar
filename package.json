@@ -9,6 +9,7 @@
     "ui"
   ],
   "scripts": {
-    "check": "npm --workspaces run check --if-present"
+    "check": "npm --workspaces run check --if-present",
+    "mcp": "npm --workspace quasar-mcp run start"
   }
 }

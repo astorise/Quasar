@@ -6,6 +6,12 @@
     "quasar-mcp": "src/index.js"
   },
   "scripts": {
+    "start": "node src/index.js serve",
     "check": "node --check src/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.13.0",
+    "ajv": "^8.17.1",
+    "zod": "^3.25.76"
   }
 }

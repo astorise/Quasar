@@ -1,0 +1,14 @@
+{
+  "id": "main",
+  "title": "Main Quasar Dashboard",
+  "refreshSeconds": 30,
+  "widgets": [
+    {
+      "id": "signups-timeseries",
+      "kind": "timeseries",
+      "query": {
+        "metric": "signups"
+      }
+    }
+  ]
+}
